@@ -4,9 +4,10 @@ const cheerio = require('cheerio');
 const request = require('request');
 //require所需要的模块
 
-for (var i = 1; i < 10; i++) {
-    var url = 'url' + i + '.html'; //定义url，定义爬取范围
-    
+
+for (var i = 10; i < 30; i++) {
+    var url = 'https://ameblo.jp/lxixsxa/page-' + i + '.html'; //定义url，定义爬取范围
+
     https.get(url, function(res) { //通过url获取html
         var html = '';
         res.setEncoding('utf-8');
@@ -15,13 +16,18 @@ for (var i = 1; i < 10; i++) {
         });
         res.on('end', function() {
             var BlogData = filterBolg(html);
-            var hms= BlogData[0].time.split(' ')[1];
-            var h=hms.split(':')[0];
-            var m=hms.split(':')[1];
-            var s=hms.split(':')[2];
-            var time = BlogData[0].time.split(' ')[0]+'-'+h+'-'+m+'-'+s;
+            var hms = BlogData[0].time.split(' ')[1];
+            var h = hms.split(':')[0];
+            var m = hms.split(':')[1];
+            var s = hms.split(':')[2];
+            var time = BlogData[0].time.split(' ')[0] + '--' + h + m + s;
+            var fileName = time.split('-')[0] + time.split('-')[1];
+            var image='image';
             console.log(BlogData);
-            imgSave(BlogData, time);
+            makeFile(BlogData[0].img, time, image, fileName, function () {
+            	imgSave(BlogData[0].img, time, fileName);
+            });
+            
             console.log('\n\n');
         }).on('err', function() {
             console.log('false');
@@ -29,6 +35,7 @@ for (var i = 1; i < 10; i++) {
     })
 
 }
+
 
 //网页解析
 function filterBolg(html) {
@@ -40,7 +47,8 @@ function filterBolg(html) {
 
     BlogContent.each(function(item) {
         var content = $(this);
-        var imgs = content.find('img');
+        //var imgUrl=content.find('img').attr('src');
+        var imgs = content.find('img') //.children('a');
         var videos = content.find('iframe');
         var text = content.text();
         var title = BlogTitle.text();
@@ -66,37 +74,58 @@ function filterBolg(html) {
         });
         //解析视频src
 
+
         BlogData.push(Data); //加进数组
     });
 
     return BlogData;
 }
 
+//新建文件夹
+function makeFile(Datas, time, file, fileName, next) {
+    
+    if (Datas.length > 0) {
+        fs.exists('./'+file+'/' + fileName + '/', function(exists) {
+            if (!exists) {
+                fs.mkdir('./'+file+'/' + fileName + '/', function(err) {
+                    if (err) {
+                        console.log(err);
+                    }
+                    	next();
+                    
+                })
+            }else{
+            	next();
+            }
+        });
+    }
+    
+}
+
 //保存图片
-function imgSave(BlogData,time) {
-	for (var i = 0; i < BlogData[0].img.length; i++) {
-	    
-	    var img_src = BlogData[0].img[i];
-	    request.head(img_src, function(err, res, body) {
-	        if (err) {
-	            console.log(err);
-	        }
-	    });
-	    request(img_src).pipe(fs.createWriteStream('./image/' + time + '-0' + i + '.jpg'));
-	}
+function imgSave(pic, time, fileName) {
+    for (var k = 0; k < pic.length; k++) {
+
+        var img_src = pic[k];
+        request.head(img_src, function(err, res, body) {
+            if (err) {
+                console.log(err);
+            }
+        });
+        request(img_src).pipe(fs.createWriteStream('./image/' + fileName + '/' + time + '-0' + k + '.jpg'));
+    }
 }
 
 //保存视频
-function videoSave(BlogData,time) {
-	for (var j = 0; j < BlogData[0].video.length; j++) {
-	    var video_src = 'https://static.blog-video.jp/output/hq/' + BlogData[0].video[j].split('=')[1] + '.mp4';
-	    request.head(video_src, function(err, res, body) {
-	        if (err) {
-	            console.log(err);
-	        }
-	    });
-	    request(video_src).pipe(fs.createWriteStream('./video/' + time + '---' + j + '.mp4'));
-	}
+function videoSave(BlogData, time) {
+    for (var j = 0; j < BlogData[0].video.length; j++) {
+        var video_src = 'https://static.blog-video.jp/output/hq/' + BlogData[0].video[j].split('=')[1] + '.mp4';
+        request.head(video_src, function(err, res, body) {
+            if (err) {
+                console.log(err);
+            }
+        });
+        request(video_src).pipe(fs.createWriteStream('./video/' + time + '~' + j + '.mp4'));
+    }
 }
-
 
