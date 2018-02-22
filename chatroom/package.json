@@ -1,0 +1,14 @@
+{
+  "name": "chatroom",
+  "version": "1.0.0",
+  "description": "基于socket.io的聊天室",
+  "main": "chatRoom.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "beatsky",
+  "license": "ISC",
+  "dependencies": {
+    "socket.io": "^2.0.4"
+  }
+}
