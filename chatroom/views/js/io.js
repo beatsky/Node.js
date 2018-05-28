@@ -86,3 +86,11 @@ socket.on('message', function (data) {
 socket.on('leave', function (data) {
   sendMessage(data, 'leave');
 })
+
+window.onload = function(){
+  document.onkeydown = function(e){
+    if (e.keyCode == 13) {
+      sendBtn.click();
+    }
+  }
+}
